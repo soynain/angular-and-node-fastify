@@ -100,3 +100,47 @@ fastify.listen({ port: 3000 }, function (err, address) {
 Me falta configurar la bdd, si solo configuro mysql2, solo tendre la posibilidad de usar querys por string, requiero un orm.
 
 Un plugin disponmible es uno de prima... pero ahi entran luego los temas de seguridad de node. Puede ser bueno.
+
+
+Le dí una leída a la docu de angular, ehm sobre el orm se cancela, puesto que los orms no se pueden configurar con
+async. 
+
+````main.js
+import { MySQLPromisePool, MySQLResultSetHeader } from "@fastify/mysql";
+import { User } from "../models/user.js";
+import Fastify from "fastify";
+import { GeneralResponse } from "../models/generalresponse.js";
+export async function saveUserDB(user: User,query: MySQLPromisePool){
+    try {
+        const connectionInstance = await query.getConnection();
+        const result = await connectionInstance.execute<MySQLResultSetHeader>("INSERT INTO exampletable(id,name,age) values (?,?,?)",[user.id,user.name,user.age]);
+
+        let response: GeneralResponse = {
+            code:"SQL_200",
+            message:"Registro guardado correctamente",
+            body:{
+                "rowUpdated":result[0].affectedRows
+            }
+        };
+
+        return response;
+    } catch (error:unknown) {
+      //  console.log((error as Error).message)
+        let except = (error as Error).message;
+        console.log(except)
+        let response: GeneralResponse = {
+            code:"SQL_500",
+            message:"Error al guardar",
+            body:{
+                "error":except
+            }
+        };
+
+        return response;
+
+    }    
+}
+
+````
+
+Así puede quedar, para objetos más grandes eso si, puede complicarse :/
