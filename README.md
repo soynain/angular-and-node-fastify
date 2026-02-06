@@ -316,3 +316,61 @@ component
 
 
 Iré probando otros conceptos para volverme más familiar y, también veremos rooteo para probar lo del footer y header.
+
+Por lo que veo de forms, si tuvieras un form catcheado y solo quisieras modificar partes de un form (PATCH), usas esto:
+
+<img width="1528" height="681" alt="image" src="https://github.com/user-attachments/assets/c4503e4e-457f-48d1-b4bc-37f8ccd59a75" />
+
+Tienes dos formas de hacer un form, por builder y por formControl:
+
+<img width="1603" height="944" alt="image" src="https://github.com/user-attachments/assets/372c119e-8fca-4996-9958-b073b2d32af4" />
+
+
+Otro concepto son los pipes y suscribes de RxJS. Puedes tener listeners sobre un form, los cuales tienen métodos de eventos por default. En un form puedes suscribirte a los eventos del form mismo por field o el form mismo:
+
+<img width="1990" height="844" alt="image" src="https://github.com/user-attachments/assets/04af9bef-6178-4cb9-8324-9dd66ffca01d" />
+
+En base a ciertas condicionales, podrias crear un label de validación como se muestra ahí, o desactivar secciones de tu form para
+que no proceda hasta corregir secciones o inputs correctamente.
+
+````main.ts
+export class FormRoot implements OnInit,OnDestroy{
+
+    private eventSubscription!: Subscription;
+    warningInvalidCharsCustom = "";
+
+    userModel = new FormGroup({
+        id:new FormControl(0,[Validators.min(1)]),
+        name:new FormControl("",[Validators.required]),
+        age:new FormControl(0,[Validators.min(1)])
+    })
+
+    ngOnDestroy(): void {
+       //  this.userModel.events.pipe().
+       this.eventSubscription.unsubscribe()
+    }
+    ngOnInit(): void {
+        this.userModel.get('name')?.valueChanges.subscribe(value=>{
+            if(value?.match(/[ `!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/)){
+                this.warningInvalidCharsCustom = "Tu nombre no debe contener caracteres especiales"
+            }else{
+                this.warningInvalidCharsCustom = ""
+            }
+            console.log("Una forma de escuchar los cambios de un input "+value)
+        })
+
+        this.eventSubscription = this.userModel.events.pipe(filter(e=>e instanceof StatusChangeEvent))
+        .subscribe((st)=>console.log('Status: '+st.status))
+    }
+
+    onSubmit(){
+        console.log(this.userModel.value)
+    }
+}
+````
+
+También parece ser los componentes tienen un ciclo de vida, y los pipes también deben tener una desuscripción
+para no tener memory leaks.
+
+Nos adentramos en otros conceptos implicitos pero ya acabamos con esto la sección de forms que es la más importante.
+
