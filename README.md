@@ -196,3 +196,123 @@ A partir de esto ya podremos codear con angular.
 ¿Qué es angular? un SPA con pre estructura, más robusto.... como odio el front, ya no me acuerdo de muchas cosas.
 
 Ay dios, pero bueno, iremos construyendo algo sencillo.
+
+Empezemos, empezaremos por los básicos. Se pueden injertar variavles directamente al html, cosa que con vue no como tal, declarabas 
+componentes vue.
+
+<img width="1307" height="761" alt="image" src="https://github.com/user-attachments/assets/89334522-1969-4384-ba81-4314ae6f67b3" />
+
+
+La estructura del proyecto consiste en el css de tu aplicativo, el routes.ts para que hagas tus rutas al spa,
+spec.ts para pruebas unitarias y el ts para lo demás
+
+<img width="371" height="288" alt="image" src="https://github.com/user-attachments/assets/bc7c8fcb-8b93-493b-baa5-15946339e20c" />
+
+Ya medio voy recordando el pex, las spa eran pa los componentes, y podias reutilizar footer y header, y dentro del bloque body cambiar el contenido
+me parece de acuerdo a las directivas que quisieras usar:
+
+Aquí nomás ando recordando, porque aunque sea fullstack me da fuchi el front, aunque he de presumir que cada maqueta que me han asignado,
+lo he podido replicar en responsive sin problemas... así que tampoco soy de subestimar
+
+Pero asi era el pex, y aquí:
+
+<img width="1823" height="877" alt="image" src="https://github.com/user-attachments/assets/15b40585-eea1-4ba9-afe7-faf0b3a96efa" />
+
+Ya me ando involucrando con esas reactividades. Lo más importante al manipular los fronts son los forms, secciones,
+componentes y las directivas ifs, los renders sobre html y esas madre, y los keys para recgargar los componentes.
+
+Son cosas que medio recuerdo de vue js, y que ya tengo códigos.
+
+Para forms es de esta manera:
+
+````main.ts
+import { Component, signal } from '@angular/core';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { form, FormField } from '@angular/forms/signals';
+import { RouterOutlet } from '@angular/router';
+
+@Component({
+    selector: 'form-root',
+    imports: [ReactiveFormsModule],
+    templateUrl: '/form.html',
+    styleUrl: '/form.css'
+})
+
+
+export class FormRoot {
+
+    userModel = new FormGroup({
+        id:new FormControl(0,[Validators.min(1)]),
+        name:new FormControl("",[Validators.required]),
+        age:new FormControl(0,[Validators.min(1)])
+    })
+
+
+    onSubmit(){
+        console.log(this.userModel.value)
+    }
+}
+````
+
+Estructurita del form:
+````form.html
+<form [formGroup]="userModel" (ngSubmit)="onSubmit()">
+    <label for="id">ID:</label>
+    <input type="number" id="id" formControlName = "id">
+
+    <label for="name">Name:</label>
+    <input type="text" id="name"  formControlName="name">
+
+    <label for="age">Age:</label>
+    <input type="number" id="age" formControlName="age">
+
+    <button type="submit" [disabled]="!userModel.valid">Submit</button>
+</form>
+````
+
+Integración al main app:
+
+````main.ts
+import { Component, signal } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
+import { FormRoot } from './modules/module';
+
+@Component({
+  selector: 'app-root',
+  imports: [RouterOutlet,FormRoot],
+  templateUrl: './app.html',
+  styleUrl: './app.css'
+})
+
+
+export class App {
+  protected readonly title = signal('angular-basics');
+  stringEx = "Hola mundo";
+}
+````
+
+Integración a tu html raiz:
+````root.html
+<style>
+  
+</style>
+
+<main class="main">
+  <div class="content">
+    {{ stringEx}}
+
+    <form-root></form-root>
+  </div>
+</main>
+
+<router-outlet />
+
+````
+
+Y la estructura primeriza, aun no visualizo porque dicen que angular tiene un marco de arquitectura por default. A lo mejor por la anotación 
+component
+
+<img width="507" height="351" alt="image" src="https://github.com/user-attachments/assets/311fe9c0-5685-45d7-a9d4-78508baa04b1" />
+
+
+Iré probando otros conceptos para volverme más familiar y, también veremos rooteo para probar lo del footer y header.
