@@ -374,3 +374,105 @@ para no tener memory leaks.
 
 Nos adentramos en otros conceptos implicitos pero ya acabamos con esto la sección de forms que es la más importante.
 
+Tópicos checados:
+
+Inyección de dependencias:
+
+Es posible crear inyección de dependencias por constructor o por inject (lo medio equivalente a un @Autowired en spring boot)
+
+<img width="1553" height="611" alt="image" src="https://github.com/user-attachments/assets/c7e310b5-c052-4a36-8e64-efe624714796" />
+
+````main.ts
+export class SignalExample implements OnInit{
+    ngOnInit(): void {
+        this.signalComputed.initComputedProperty(this.valor)
+    }
+    protected readonly title = signal('angular-basics');
+    protected valor = signal('gooks')
+    protected signalComputed: UpperCaseSignal = inject(UpperCaseSignal);
+
+
+    
+
+    changeVal() {
+        this.valor.set('reactividad probada')
+    }
+}
+````
+````main.ts
+@Injectable({providedIn:'root'})
+export class UpperCaseSignal{
+
+    protected computedProperty!:Signal<string>
+
+    initComputedProperty(value: Signal<string>){
+        this.computedProperty = computed(()=>value().toUpperCase());
+    }
+
+    getComputedProperty(){
+        return this.computedProperty()
+    }
+}
+````
+Y en html:
+
+````main.html
+<section>
+    <p>Ejemplos de reactividad e injección de dependencias</p>
+    
+    <p>Valor signal reactivo: {{valor()}}</p>
+
+    <p>Valor reactivo con mayúsculas: {{signalComputed.getComputedProperty()}}</p>
+
+    <button (click)="changeVal()">Enviar signal a variable para reactividad</button>
+</section>
+````
+
+Y al clickear el botón, cambias el contenido de la variable reactiva y también el computed cambia en base al contenido.
+
+Los computed son variables que te hacen calculos en automático, imagina una calculadora de simulación
+de presupuesto de hipoteca por año con intereses, eso te lo calcula.
+
+También el anhidar booleanos a los estilos por elemento html, lo básico:
+
+````main.html
+<section>
+        <p [style.visibility]="!hideBlock() ? 'visible' : 'hidden'">Este elemento debería esconderse si le doy click a mi botón</p>
+
+        <button (click)="hideBlockAction()">Esconder bloque con signal asignado</button>
+</section>
+````
+
+````main.ts
+protected hideBlock = signal(false)
+    hideBlockAction(){
+        !this.hideBlock() ? this.hideBlock.set(true) : this.hideBlock.set(false);
+    }
+````
+
+Otro punto son los eventos por tecla en input, vienen útiles y también puedes añadir el truco de timeouts al hacer invocaciones ^^
+
+<img width="776" height="138" alt="image" src="https://github.com/user-attachments/assets/ba9b50bd-50d9-48aa-b3ed-4b96a49bffd5" />
+
+````main.html
+<section>
+        <input type="text" (keyup.control.c)="ctrlCInputAction($event)">
+
+        @if(tempInterval()){
+            <p>Texto copiado al portapapeles (simulación de timeout con teclas)</p>
+        }
+    </section>
+````
+
+````main.ts
+protected tempInterval = signal(false)
+    ctrlCInputAction(event: Event){
+        this.tempInterval.set(true);
+
+        setTimeout(()=>{
+            this.tempInterval.set(false);
+        },5000)
+    }
+````
+
+Entonces para tus alerts customizados con teclas viene perfecto, se oculta en 5 segundos
