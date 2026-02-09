@@ -372,7 +372,7 @@ Nos adentramos en otros conceptos implicitos pero ya acabamos con esto la secci�
 
 Tópicos checados:
 
-Inyección de dependencias:
+*Inyección de dependencias*
 
 Es posible crear inyección de dependencias por constructor o por inject (lo medio equivalente a un @Autowired en spring boot)
 
@@ -534,6 +534,8 @@ Y lo adaptas a tu app.ts. Al final este será el resultado:
 
 <img width="924" height="342" alt="image" src="https://github.com/user-attachments/assets/45fa2f4a-ff45-40e7-b5ce-2f7641b930ad" />
 
+*Pipes*
+
 Un componente que usa pipes, los pipes es otro concepto, componentes que sirven para transformar datos, angular trae unos por default pero tu puedes crear
 tus propios datos.
 
@@ -594,3 +596,99 @@ También hay unos input por campo que se usa con doble anhidado [()], pero tiene
 Otro tema a ver por último, serán los stores, routing, testing y, Lit-Element que es una librería que ocupan en BBVA.
 
 No confundan en estos ejemplos la falta de css con nulo conocimiento en front, es probar comportamiento nadamas del framework.
+
+Iremos tocando los últimos conceptos a validar en Angular, también hay que incluir los shared resources y debounce.
+
+*Routing*
+
+También básico, yo recuerdo en Vue que podías aplicar routing solo sobre un componente y mantener header y footer intactos.
+
+Si quieres cambiar simplemente el prefijo main de la url, lo declaras así:
+
+````main.ts
+import { Routes } from '@angular/router';
+import { App } from './app';
+
+export const routes: Routes = [
+    {
+        path:'',
+        redirectTo:'mainPage/home',
+        pathMatch:'full'
+    },
+    {
+        path:'mainPage/home',
+        title:'MainApp',
+        component:App
+    }
+];
+
+````
+
+Cada vez que vayas a localhost taiz te va a redirigir a tu prefijo declarado, también no puedes empezar los paths con una diagonal al inicio
+aunque la documentación te indique lo contrario.
+
+<img width="2056" height="480" alt="image" src="https://github.com/user-attachments/assets/da9bf166-553b-453a-b483-e176ce5d30b6" />
+
+Con un pequeño twist, ya supe como hacerle, en tu app html importas el router-outlet dentro de tu section:
+
+````main.html
+<style>
+  
+</style>
+<header style="border: 2px solid black;">
+  HEADER DE TU PÁGINA PRINCIPAL
+</header>
+<main class="main">
+  <div class="content">
+    <p>{{ stringEx}}</p>
+
+    <router-outlet/>
+  </div>
+</main>
+<footer style="border: 2px solid black;">Footer de tu pagina principal, disponible en todos tus components</footer>
+````
+El app ts lo dejas vacio solo con RouterOutlet y en routes importas otro componente encapsulando nuestras prácticas:
+
+````main.ts
+@Component({
+  selector: 'app-root',
+  imports: [RouterOutlet],
+  templateUrl: './app.html',
+  styleUrl: './app.css'
+})
+
+
+export class App {
+  stringEx = "Bienvenido a está website para prácticas sencillitas de angular";
+}
+
+/*Y en otro componente agrupas tu section con tus funcionalidades*/
+
+@Component({
+    selector:'homepage',
+    imports:[FormRoot,SignalExample,InputComponentExample],
+    templateUrl:'./homepage.html'
+})
+
+export class HomePage{}
+
+/**Y en routes declaras el principal, tu app solo se vuelve un gateway que usas con routeroutler**/
+export const routes: Routes = [
+    {
+        path:'',
+        redirectTo:'mainPage/home',
+        pathMatch:'full'
+    },
+    {
+        path:'mainPage/home',
+        title:'MainApp',
+        component:HomePage
+    }
+];
+````
+
+
+
+
+
+
