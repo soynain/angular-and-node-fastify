@@ -193,11 +193,7 @@ export async function getAllUsers(query: MySQLPromisePool) : Promise<GeneralResp
 
 A partir de esto ya podremos codear con angular.
 
-¿Qué es angular? un SPA con pre estructura, más robusto.... como odio el front, ya no me acuerdo de muchas cosas.
-
-Ay dios, pero bueno, iremos construyendo algo sencillo.
-
-Empezemos, empezaremos por los básicos. Se pueden injertar variavles directamente al html, cosa que con vue no como tal, declarabas 
+¿Qué es angular? un SPA con pre estructura, más robusto. Empezemos, empezaremos por los básicos. Se pueden injertar variavles directamente al html, cosa que con vue no como tal, declarabas 
 componentes vue.
 
 <img width="1307" height="761" alt="image" src="https://github.com/user-attachments/assets/89334522-1969-4384-ba81-4314ae6f67b3" />
@@ -211,10 +207,10 @@ spec.ts para pruebas unitarias y el ts para lo demás
 Ya medio voy recordando el pex, las spa eran pa los componentes, y podias reutilizar footer y header, y dentro del bloque body cambiar el contenido
 me parece de acuerdo a las directivas que quisieras usar:
 
-Aquí nomás ando recordando, porque aunque sea fullstack me da fuchi el front, aunque he de presumir que cada maqueta que me han asignado,
+Aquí nomás ando recordando, porque aunque sea fullstack el front es lo que menos disfruto, aunque he de presumir que cada maqueta que me han asignado,
 lo he podido replicar en responsive sin problemas... así que tampoco soy de subestimar
 
-Pero asi era el pex, y aquí:
+Pero asi era el tema, y aquí:
 
 <img width="1823" height="877" alt="image" src="https://github.com/user-attachments/assets/15b40585-eea1-4ba9-afe7-faf0b3a96efa" />
 
@@ -475,4 +471,126 @@ protected tempInterval = signal(false)
     }
 ````
 
-Entonces para tus alerts customizados con teclas viene perfecto, se oculta en 5 segundos
+Entonces para tus alerts customizados con teclas viene perfecto, se oculta en 5 segundos.
+
+Volviendo a la práctica del angulas basics, veremos dos nuevos conceptos: 
+
+*Inputs*
+
+Hay unos inputs de anotación que te permiten crear tus componentes customizados
+con tus propios parametros, muy buenos para lógica explicita:
+
+````component.html
+<section>
+    <header>Aquí en este componente haremos el uso de los inputs:</header>
+
+    <p>Los inputs son componentes donde puedes definir sus propiedades customizadas</p>
+
+    <moyi-componente userName="Moisexy" userAge="26" credentialPrice="1393546.98"></moyi-componente>
+</section>
+````
+
+Quiero un componente que me despliegue datos formateados, en código lo creas asi:
+
+````main.ts
+import { CurrencyPipe } from "@angular/common";
+import { Component, Input, numberAttribute } from "@angular/core";
+
+@Component({
+    selector:'moyi-componente',
+    imports:[CurrencyPipe],
+    template:`
+        <section>
+        <p>Nombre del usuario: {{userName}}</p>
+        <p>Edad del usuario: {{userAge}}</p>
+        <p>Deuda: {{credentialPrice | currency}}</p>
+    </section>
+    `
+})
+
+export class MoyiComponente{
+    @Input({required: true}) userName!: string;
+    @Input({required: true,transform:numberAttribute}) userAge!:string;
+    @Input({required:false}) credentialPrice!:string;
+}
+````
+
+Lo declaras en un componente main vacio, o con otra lógica:
+
+````main.ts
+import { Component } from "@angular/core";
+import { MoyiComponente } from "./moyicomponente";
+
+@Component({
+    imports:[MoyiComponente],
+    templateUrl:'./component.html',
+    selector: 'input-example-section'
+})
+
+export class InputComponentExample{}
+````
+
+Y lo adaptas a tu app.ts. Al final este será el resultado:
+
+<img width="924" height="342" alt="image" src="https://github.com/user-attachments/assets/45fa2f4a-ff45-40e7-b5ce-2f7641b930ad" />
+
+Un componente que usa pipes, los pipes es otro concepto, componentes que sirven para transformar datos, angular trae unos por default pero tu puedes crear
+tus propios datos.
+
+Aquí aunque no es necesario, por temas de demostración hicimos un pipe para, manualmente parsear todo el array con formato currency:
+
+````main.ts
+import { CurrencyPipe, formatCurrency, formatNumber } from "@angular/common";
+import { Inject, LOCALE_ID, numberAttribute, Pipe, PipeTransform } from "@angular/core";
+
+@Pipe({
+    name:'moyiPipe',
+    standalone: true
+})
+
+export class MoyiPipe implements PipeTransform{
+    constructor(
+    @Inject(LOCALE_ID) public locale: string,){}
+    transform(value: string[]) {
+       return value.map((e:string,index:number)=>formatCurrency(Number.parseFloat(e),this.locale,"$"));
+    }
+
+}
+````
+
+Con standalone no lo anhidas como ngModel. Y lo implementas con la anotación pipe | :
+
+````main.html
+<header>Gastos del mes actual desglosados</header>
+
+    @for(price of getBillsActualMonth() | moyiPipe ; track price){
+        <p>{{price}}</p>
+    }
+
+    <p>Total de gasto: {{totalArr() | currency}}</p>
+````
+
+Y para el total, se crea con un computed property:
+
+````main.ts
+export class InputComponentExample{
+    protected spendsActualMonth = ["1345623.97","295.56","567.90","4567.88"]
+
+    getBillsActualMonth(){
+        return this.spendsActualMonth
+    }
+
+    protected totalArr = computed(()=>{return this.spendsActualMonth.map((elem)=>Number.parseFloat(elem)).reduce((prev,curr)=>prev+=curr).toFixed(2) });
+    
+}
+````
+
+<img width="936" height="632" alt="image" src="https://github.com/user-attachments/assets/0359a6ee-7e29-4280-a66b-a64cc871ed76" />
+
+Y listo, puedes crear tus calculadoras dinámicas.
+
+También hay unos input por campo que se usa con doble anhidado [()], pero tienes el formgrouo para muchas cuestiones.
+
+Otro tema a ver por último, serán los stores, routing, testing y, Lit-Element que es una librería que ocupan en BBVA.
+
+No confundan en estos ejemplos la falta de css con nulo conocimiento en front, es probar comportamiento nadamas del framework.
