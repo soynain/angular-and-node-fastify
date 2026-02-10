@@ -687,8 +687,163 @@ export const routes: Routes = [
 ];
 ````
 
+Para simular un login con state, use NgRX, ya que implementan varias estrategias de store. La más recientes es signal store.
+
+En vue js los stores más modernos se manejan por pinia que es sencillo, en versiones antiguas de vue se usaba vuex.
+
+En angular es el store común que requiere varios archivos, signal store te simplifica eso. La neta no le entendí a la docu, pero este blog
+me sirvió para entenderlo bien, se los recomiendo: https://www.codeabien.com/blog/ngrx-signal-store
+
+La estructura de mi store queda así:
+
+````main.ts
+import { patchState, signalStore, withMethods, withState } from '@ngrx/signals';
+export interface UserState {
+    isLoggedIn: boolean;
+    userInfo: {
+        name: string;
+        email: string;
+    } | null;
+}
+
+/**De acuerdo a la docu, mockear un fetch */
+const initialState: UserState = {
+    isLoggedIn: false,
+    userInfo: {name: 'n/a',email: 'n/a'}
+};
+
+/**La misma simplicidad que pinia */
+export const UserStore = signalStore({ providedIn: 'root' },
+    withState<UserState>(initialState),
+    withMethods((store)=>({
+        saveUserSession(user: UserDetails){
+            patchState(store,{userInfo:{'name':user.name,'email':user.email}}) //con patch seteas las propiedades
+            patchState(store,{isLoggedIn:true});
+            console.log("AUTH STORE INICIALIZADO")
+        }
+    })),
+    withHooks({
+        onInit(store){
+            const saved = localStorage.getItem('session_data');
+            if (saved) {
+                patchState(store, JSON.parse(saved));
+            }
+
+            // 2. Efecto reactivo: cada vez que el store cambie, guardamos en localStorage
+            effect(() => {
+                const state = {
+                    userInfo: store.userInfo(),
+                    isLoggedIn: store.isLoggedIn()
+                };
+                localStorage.setItem('session_data', JSON.stringify(state));
+            });
+        }
+    })
+);
+````
+El  withHooks sirve para mantener las cosas en tu localStorage, porque no importa que uses stores, todos
+dependen del local storage.
+
+En pinia la sintaxis es así, esto es fragmento de un proyecto x... donde implementé pinia para un login hace ya años:
+
+<img width="1012" height="874" alt="image" src="https://github.com/user-attachments/assets/803dde02-15a1-4f55-99cc-c6af39b20a58" />
+
+Siguen la misma lógica si te das cuenta: estado inicial, acciones e instancia, y los puedes instanciar en cualquier parte de tu aplicativo.
+
+Creamos un botton mock y programamos su comportamiento, instanciando el método del store que podemos inyectar como Provider:
+
+````main.ts
+`<button (click)="testStore()">Login solo con boleano</button>`
+
+@Component({
+   /***/
+    providers:[UserStore]
+})
+
+export class InputComponentExample{
+ /*.........*/
+
+    testStore(){
+        console.log(this.userStory.userInfo())
+
+        let mockLoginByButton:UserDetails = {name:'Moisexy',email:'moisexy@godly.mx'}
+
+        this.userStory.saveUserSession(mockLoginByButton);
+    }
+    
+    readonly userStory = inject(UserStore);
+````
+
+Y así podemos cambiar un booleano guardado como estado a true, util para nuestros routings protegidos.
+
+Ahora para simular rutas protegidas, hacemos lo sig:
+
+declara tu ruta con el tag "canActicate", después
+
+````main.ts
+ {
+        path:'logged',
+        title:'Felicidades',
+        component:LoggedIn,
+        canActivate:[basicGuard],
+}
+
+export const basicGuard: CanActivateFn= (route: ActivatedRouteSnapshot,state: RouterStateSnapshot)=>{
+    const userStore = inject(UserStore);
+    const router = inject(Router);
+
+    if(!userStore.isLoggedIn()){
+        const loginPath = router.parseUrl("/mainPage/home");
+        return new RedirectCommand(loginPath, {
+          skipLocationChange: true,
+        });
+    }
+    
+    console.log('pre guard '+userStore.isLoggedIn())
+    return userStore.isLoggedIn();
+}
+````
+
+Y crear una función canActivate, hay varios tipos de función de rooteo que puedes encadenar en paths.
+
+Con esto si no estás logueado te redirife a tu homePage, y si lo estás, te permitirá acceder a tu componente:
+
+<img width="2546" height="1439" alt="image" src="https://github.com/user-attachments/assets/d6ffa143-8859-472d-a8f0-2a43fe62714d" />
+
+
+Si visito manualmente el path
+
+<img width="2442" height="1332" alt="image" src="https://github.com/user-attachments/assets/685fa5db-64f1-4efa-a910-a53b6bba42a7" />
+
+Ya me permitirá ver mi componente, de lo contrario no.
+
+Con esto ya dominamos los básicos de angular ciertamente, al menos lo moderno.
+
+Dejaré el tópico de testing a lo último, pero no creo que haya tanto problema en eso.
+
+Por último, este parametro
+````main.ts
+return new RedirectCommand(loginPath, {
+          skipLocationChange: false,
+        });
+````
+Más info aquí:
+
+https://angular.dev/api/router/RedirectCommand
 
 
 
+Dejalo en false, es para que cuando te haga el redirect, cambie tu url al redirigir!
 
+Ahora solo faltaria ver testing, y lit element, aunque tal vez el último framework me lo salte. Sería testing pero
+yo creo pospondré tantito ese tópico para rotar a algun tema de back.
 
+Y así de simple, hemos dominado la versión 20 de Angular ^^.
+
+El resto de detalles como debounce y esas cosillas las checaré ya en un trabajo. La verdad es que... para eso existe la documentación por dios.
+
+Para angular se ha tratado de ocupar chatgpt pocas veces, por lo tanto puedo constatar que su documentación es muy fabulosa y buena, y enseña bien las bases.
+
+Si vienes de Vue js, no te va a costar trabajar. 
+
+Con esto ya hemos cubierto las básicas sobre este tópico... tal vez añadamos pruebas....
