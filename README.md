@@ -847,3 +847,181 @@ Para angular se ha tratado de ocupar chatgpt pocas veces, por lo tanto puedo con
 Si vienes de Vue js, no te va a costar trabajar. 
 
 Con esto ya hemos cubierto las básicas sobre este tópico... tal vez añadamos pruebas....
+
+Por último, pruebas de cobertura básicas:
+
+El reporte te lo muestra así:
+
+<img width="955" height="649" alt="image" src="https://github.com/user-attachments/assets/1c1778b7-4dfe-4ffd-8a44-35840fd26c9d" />
+
+Te indica las líneas a probar en rojo.
+
+````main.ts
+import { TestBed } from '@angular/core/testing';
+import { App } from './app';
+import { FormRoot } from './modules/UserForm/module';
+import { HomePage } from './modules/HomePageComponent/module';
+import { SignalExample } from './modules/ComputedExample/module';
+import jasmine from 'jasmine';
+import { InputComponentExample } from './modules/AnotherForm/module';
+
+
+describe('App', () => {
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [App],
+    }).compileComponents();
+  });
+
+  it('should create the app', () => {
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance;
+    expect(app).toBeTruthy();
+  });
+
+  it('should render title', async () => {
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('p')?.textContent).toContain('Bienvenido a está website para prácticas sencillitas de angular');
+  });
+
+
+});
+
+
+describe('FormRoot', () => {
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [HomePage],
+    }).compileComponents();
+  });
+
+  it('Deberia crear el formulario', async() => {
+    const fixture = TestBed.createComponent(HomePage);
+    const app = fixture.componentInstance;
+    await fixture.detectChanges();
+    expect(app).toBeTruthy();
+  });
+
+  it('El init lifecycle debe bloquear caracteres especiales en el campo nombre y mostrar un texto indicando el error',async()=>{
+    //based on formRoot.ts, create a test to validate the formgroup and onSubmit event
+    const fixture = TestBed.createComponent(FormRoot);
+    const app = fixture.componentInstance;
+
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    const nameControl = app.userModel.get('name');
+    nameControl?.setValue('John Doe@');
+
+    expect(app.warningInvalidCharsCustom()).toEqual(true);
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(compiled.querySelector('p')?.textContent).toContain('El nombre no puede tener caracteres especiales')
+    
+  });
+
+
+});
+
+describe('SignalExample', () => {
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [SignalExample],
+    }).compileComponents();
+  });
+
+  
+  it('Deberá cambiar el valor signal del string a otro valor con la función changeVal()',async()=>{
+    const fixture = TestBed.createComponent(SignalExample);
+    const app = fixture.componentInstance;
+
+    await fixture.detectChanges();
+
+    expect(app.getValor()).toEqual('gooks');
+
+    app.changeVal();
+
+    await fixture.detectChanges();
+
+    expect(app.getValor()).toEqual('reactividad probada');
+  });
+
+  it('Deberá esconder bloques de ejemplo con hideBlock() en el html y cambiar el valor de esa variable signal',async()=>{
+    const fixture = TestBed.createComponent(SignalExample);
+    const app = fixture.componentInstance;
+
+    await fixture.detectChanges();
+    let compiled = fixture.nativeElement as HTMLElement;
+
+    expect(app.getHideBlock()).toEqual(false)
+
+    let blockElement = compiled.querySelector('#blockHidden');
+    expect(blockElement).toBeTruthy();
+    expect(window.getComputedStyle(blockElement!).visibility).toEqual('visible');
+
+    app.hideBlockAction();
+
+    await fixture.detectChanges();
+    compiled = fixture.nativeElement as HTMLElement;
+
+    expect(app.getHideBlock()).toEqual(true)
+
+    blockElement = compiled.querySelector('#blockHidden');
+    expect(blockElement).toBeTruthy();
+    expect(window.getComputedStyle(blockElement!).visibility).toEqual('hidden');
+  });
+  it('Al activar el intervalo se mostrará un elemento por 5 segundos, pasado los 5 segundos, deberá ocultar otra vez un elemento html',async()=>{
+    const fixture = TestBed.createComponent(SignalExample);
+    const app = fixture.componentInstance;
+
+    await fixture.detectChanges();
+
+    expect(app.getTempInterval()).toEqual(false);
+
+    app.ctrlCInputAction(new Event('input.keyup.control.c'));
+  //  expect(app.getTempInterval()).toEqual(true);
+    await fixture.whenStable(); 
+    fixture.detectChanges();
+
+    expect(app.getTempInterval()).toEqual(true);
+    
+    await new Promise((resolve)=>setTimeout(resolve,5000))
+
+    expect(app.getTempInterval()).toEqual(false);
+    
+  },7000);
+
+}); 
+
+
+describe('InputComponentExample', () => {
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [InputComponentExample],
+    }).compileComponents();
+  });
+
+  it('Debe iniciar sesión correctamente',async()=>{
+    const fixture = TestBed.createComponent(InputComponentExample);
+    const app = fixture.componentInstance;
+
+    await fixture.detectChanges();
+    expect(app.userStory.isLoggedIn()).toEqual(false);
+    app.testStore();
+
+    await fixture.detectChanges();
+    expect(app.userStory.isLoggedIn()).toEqual(true);
+
+  })
+
+});
+
+````
+Al final me faltó unos cuantos tests, no pude replicarlo por un tema con la implementación del suscribe, entonces
+la cobertura te obliga a validar otra manera de testear:
+
+<img width="789" height="573" alt="image" src="https://github.com/user-attachments/assets/6c4999db-6226-4286-aca1-eb313e100395" />
