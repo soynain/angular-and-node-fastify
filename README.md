@@ -1025,3 +1025,5 @@ Al final me faltó unos cuantos tests, no pude replicarlo por un tema con la imp
 la cobertura te obliga a validar otra manera de testear:
 
 <img width="789" height="573" alt="image" src="https://github.com/user-attachments/assets/6c4999db-6226-4286-aca1-eb313e100395" />
+
+Con esto ya finalizamos el tema de angular y fastify en basics.
